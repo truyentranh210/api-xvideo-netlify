@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import * as cheerio from "cheerio";
 
 const JRANTS_BASE_URL = "https://vn.jrants.com";
@@ -24,7 +23,8 @@ export async function handler(event) {
       },
     });
 
-    if (!res.ok) throw new Error(`Lỗi HTTP ${res.status}`);
+    if (!res.ok)
+      throw new Error(`Lỗi HTTP ${res.status} khi truy cập ${search_url}`);
 
     const html = await res.text();
     const $ = cheerio.load(html);
@@ -33,7 +33,7 @@ export async function handler(event) {
     $("article.post-item h2.post-title a").each((_, el) => {
       const title = $(el).text().trim();
       const link = $(el).attr("href");
-      articles.push({ title, link });
+      if (title && link) articles.push({ title, link });
     });
 
     return {
@@ -43,9 +43,9 @@ export async function handler(event) {
     };
   } catch (err) {
     return {
-      statusCode: 503,
+      statusCode: 500,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ error: `Lỗi khi truy cập Jrants: ${err}` }),
+      body: JSON.stringify({ error: `Lỗi khi tải dữ liệu: ${err.message}` }),
     };
   }
 }
