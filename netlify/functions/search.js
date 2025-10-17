@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import * as cheerio from "cheerio";
 
 const BASE_URL = "https://www.xvideos.com";
@@ -19,6 +18,7 @@ export async function handler(event) {
   const search_url = `${BASE_URL}/?k=${keyword_for_url}&p=${page}`;
 
   try {
+    // ✅ Dùng fetch sẵn có của Netlify
     const res = await fetch(search_url, {
       headers: {
         "User-Agent":
@@ -26,7 +26,8 @@ export async function handler(event) {
       },
     });
 
-    if (!res.ok) throw new Error(`Lỗi HTTP ${res.status}`);
+    if (!res.ok)
+      throw new Error(`Lỗi HTTP ${res.status} khi truy cập ${search_url}`);
 
     const html = await res.text();
     const $ = cheerio.load(html);
@@ -49,9 +50,9 @@ export async function handler(event) {
     };
   } catch (err) {
     return {
-      statusCode: 503,
+      statusCode: 500,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ error: `Lỗi khi truy cập trang web: ${err}` }),
+      body: JSON.stringify({ error: `Lỗi khi tải dữ liệu: ${err.message}` }),
     };
   }
 }
